@@ -10,13 +10,14 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
         .in_time_zone('Eastern Time (US & Canada)')
   end
   let(:my_job) { described_class.new }
-  let(:test_count) { 13 }
+  let(:test_count) { 14 }
 
   before :each do
     stub_const('MyModuleJob::MyFirstJob::MIN_STEP', 1)
     stub_total_batch(:paid)
 
-    test_count.times do
+    # since times runs n+1 times
+    1.upto(test_count) do
       create_total_batch_base(prev_day)
     end
   end
@@ -36,7 +37,7 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
 
   describe '00:00 start run' do
     let(:start_day) do
-      Time.parse("2017-11-08 00:00:00 CST -06:00")
+      Time.parse('2017-11-08 00:00:00 CST -06:00')
           .in_time_zone('Eastern Time (US & Canada)')
     end
 
@@ -47,19 +48,25 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
     after(:each) { travel_back }
 
     it 'first run out of slot' do
-      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything) # 13
-      worker.perform_now # 13
+      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything)
+      worker.perform_now
     end
 
     it 'first run out of slot, to first slot' do
-      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything).twice
-      (1..6).each do |run_step|
+      expect(MyAsyncJob::MyOtherJob).to receive(:perform_later).with(anything).twice
+      (1..20).each do |run_step|
         worker.perform_now
-        travel_to(start_day + run_step.hour)
+        # travel_to(start_day + run_step.hour)
       end
+
+      expect do
+        1.upto(3) do |run_step|
+          worker.new.perform
+          travel_to(start_day + run_step.hour)
+        end
+      end.to have_enqueued_job(MyAsyncJob::MyOtherJob).exactly(3).times
     end
   end
-
 
   describe '5 AM start run' do
     let(:start_day) do

@@ -40,6 +40,8 @@ group :development, :test do
   gem 'byebug'
   gem 'rspec-rails', '3.5.1'
   gem 'rspec-activejob'
+
+  gem 'pry-rails'
 end
 
 group :development do

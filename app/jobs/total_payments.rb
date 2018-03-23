@@ -40,9 +40,8 @@ module TotalPayments
       end
     end
 
-    def step_bases(base_records)
-      key = Time.current.in_time_zone('Eastern Time (US & Canada)')
-                .beginning_of_hour.strftime('%H:%M')
+    def step_bases(records_count)
+      key = Time.now.beginning_of_hour.strftime('%H:%M')
 
       current_step = STEPS[key]
       return 0 if current_step.blank?
@@ -54,14 +53,13 @@ module TotalPayments
           19.0 - current_step
         end
 
-      limit = (base_records / pending).ceil
-      [limit, MIN_STEP].max
+      limit = (records_count / pending).ceil
+      [limit, MyModuleJob::MyFirstJob::MIN_STEP].max
     end
 
     def schedule_base(base_records)
       step_limit = step_bases(base_records.count)
       base_records.limit(step_limit).pluck(:id)
     end
-
   end
 end
