@@ -1,21 +1,24 @@
 require 'rails_helper'
 
-
 RSpec.describe TotalPayments::MyFirstJob, type: :job do
   include ActiveJob::TestHelper
   include ActiveSupport::Testing::TimeHelpers
+
   let(:worker) { described_class }
-  let(:prev_day) { Time.parse("2017-11-07 01:00:00 CST -06:00").in_time_zone('Eastern Time (US & Canada)') }
+  let(:prev_day) do
+    Time.parse('2017-11-07 01:00:00 CST -06:00')
+        .in_time_zone('Eastern Time (US & Canada)')
+  end
   let(:my_job) { described_class.new }
 
   before :each do
-    stub_const("MyModuleJob::MyFirstJob::MIN_STEP", 1)
-      stub_total_batch(:paid)
+    stub_const('MyModuleJob::MyFirstJob::MIN_STEP', 1)
+    stub_total_batch(:paid)
+
     13.times do
       create_total_batch_base(prev_day)
     end
   end
-  
 
   it 'distributes the time difference correctly' do
     expect(worker.new.time_difference(13)).to eq(23)
@@ -31,7 +34,10 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
   end
 
   describe '00:00 start run' do
-    let(:start_day) { Time.parse("2017-11-08 00:00:00 CST -06:00").in_time_zone('Eastern Time (US & Canada)') }
+    let(:start_day) do
+      Time.parse("2017-11-08 00:00:00 CST -06:00")
+          .in_time_zone('Eastern Time (US & Canada)')
+    end
 
     before :each do
       travel_to(start_day)
@@ -40,8 +46,7 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
     after(:each) { travel_back }
 
     it 'first run out of slot' do
-      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything)
-      # 13
+      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything) # 13
       worker.perform_now # 13
     end
 
@@ -56,7 +61,10 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
 
 
   describe '5 AM start run' do
-    let(:start_day) { Time.parse("2017-11-08 05:00:00 CST -06:00").in_time_zone('Eastern Time (US & Canada)') }
+    let(:start_day) do
+      Time.parse("2017-11-08 05:00:00 CST -06:00")
+          .in_time_zone('Eastern Time (US & Canada)')
+    end
 
     before :each do
       travel_to(start_day)
@@ -69,7 +77,7 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
       # 13
       worker.perform_now # 10
     end
-    
+
 
     it '2 runs' do
       expect(MyAsyncJob::MyOtherJob).to receive(:perform_later).with(anything).exactly(4).times
@@ -143,24 +151,25 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
   end
 
   context 'Respect min limit' do
-    let(:start_day) { Time.parse("2017-11-08 19:00:00 CST -06:00").in_time_zone('Eastern Time (US & Canada)') }
+    let(:start_day) do
+      Time.parse("2017-11-08 19:00:00 CST -06:00")
+          .in_time_zone('Eastern Time (US & Canada)')
+    end
 
     before :each do
       travel_to(start_day)
       stub_const("BatchPaymentJob::CfeTotalBatch::MIN_STEP", 10)
     end
-    
+
     after(:each) { travel_back }
 
     it '1 run' do
-      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything).exactly(10).times
-      # 13
+      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything).exactly(10).times # 13
       worker.perform_now # 3
     end
 
     it '1 run' do
-      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything).exactly(13).times
-      # 13
+      expect(MyAsyncJob::MyOtherJob).not_to receive(:perform_later).with(anything).exactly(13).times # 13
       worker.perform_now # 3
       travel_to(start_day + 1.hour)
       worker.perform_now # 0
@@ -180,4 +189,4 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
        rec.update(status: processor_pay_status)
      end
    end
-end 
+end
