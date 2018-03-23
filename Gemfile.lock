@@ -124,6 +124,9 @@ GEM
       ffi (>= 0.5.0, < 2)
     rdoc (4.3.0)
     redis (3.3.3)
+    rspec-activejob (0.6.1)
+      activejob (>= 4.2)
+      rspec-mocks
     rspec-core (3.5.4)
       rspec-support (~> 3.5.0)
     rspec-expectations (3.5.0)
@@ -211,6 +214,7 @@ DEPENDENCIES
   jbuilder (~> 2.0)
   jquery-rails
   rails (= 4.2.10)
+  rspec-activejob
   rspec-json_expectations (~> 2.1.0)
   rspec-rails (= 3.5.1)
   sass-rails (~> 5.0)
