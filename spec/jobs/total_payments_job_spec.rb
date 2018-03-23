@@ -10,18 +10,19 @@ RSpec.describe TotalPayments::MyFirstJob, type: :job do
         .in_time_zone('Eastern Time (US & Canada)')
   end
   let(:my_job) { described_class.new }
+  let(:test_count) { 13 }
 
   before :each do
     stub_const('MyModuleJob::MyFirstJob::MIN_STEP', 1)
     stub_total_batch(:paid)
 
-    13.times do
+    test_count.times do
       create_total_batch_base(prev_day)
     end
   end
 
   it 'distributes the time difference correctly' do
-    expect(worker.new.time_difference(13)).to eq(23)
+    expect(worker.new.time_difference(test_count)).to eq(worker::SECONDS / test_count)
   end
 
   it 'queues the job' do
